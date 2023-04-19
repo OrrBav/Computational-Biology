@@ -3,7 +3,7 @@ import random
 
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 500
-GRID_SIZE = 5
+GRID_SIZE = 20
 
 class Person:
     def __init__(self, doubt, l, location, color="white"):
@@ -15,7 +15,7 @@ class Person:
 
 
 class App:
-    def __init__(self, master, P=0.3):
+    def __init__(self, master, P=0.6):
         self.master = master
         master.title("Person Interaction GUI")
         self.P = P
@@ -50,26 +50,9 @@ class App:
                 cell.grid(row=row, column=col, padx=1, pady=1)
                 self.cells[row][col] = cell
 
-        # initialize the rumor starter for the first round
-        self.rumor_starter = random.choice([person for row in self.people for person in row if person is not None])
-        self.current_rumors.append(self.rumor_starter)
-        self.rumor_starter.color = "yellow"
-        row_1, col_1 = self.rumor_starter.location
-        self.cells[row_1][col_1].configure(bg=self.rumor_starter.color)
-        self.master.after(1000, self.run_round)
-        # # add a "Next Round" button
-        # next_round_button = tk.Button(self.master, text="Next Round", command=self.run_round)
-        # next_round_button.grid(row=GRID_SIZE + 1, column=0, columnspan=GRID_SIZE)
+
 
     def run_round(self):
-        """
-        # select the rumor starter for this round
-        self.rumor_starter = random.choice([person for row in self.people for person in row if person is not None])
-        """
-        # set the rumor starter's color to red
-        # self.rumor_starter.color = "red"
-        row, col = self.rumor_starter.location
-        # self.cells[row][col].configure(bg=self.rumor_starter.color)
         new_rumors = []
         for rumor_spreader in self.current_rumors:
             row, col = rumor_spreader.location
@@ -84,8 +67,10 @@ class App:
 
         # TODO: remove current spreaders from self.current_rumors and add the new ones
         for old_rumor in self.current_rumors:
-            old_rumor.color = "blue"
+            old_rumor.color = "green"
         self.current_rumors = new_rumors
+        for new_rumor in self.current_rumors:
+            new_rumor.color = "yellow"
         # TODO: add support for complicated rumor behaviour: doubt level, rumor cooldown, rumor level, etc.
 
         # # update the rumor cooldown for all people
@@ -98,8 +83,32 @@ class App:
         #             elif person.rumor_cooldown > 0:
         #                 person.rumor_cooldown -= 1
         # self.master.after(1000)
-        self.master.after(1000, self.run_round)
+
+    def update_grid_colors(self):
+        for row in range(GRID_SIZE):
+            for col in range(GRID_SIZE):
+                person = self.people[row][col]
+                if person:
+                    self.cells[row][col].configure(bg=person.color)
+
+    def main_loop(self):
+        # initialize the rumor starter for the first round
+        self.rumor_starter = random.choice([person for row in self.people for person in row if person is not None])
+        self.current_rumors.append(self.rumor_starter)
+        self.rumor_starter.color = "yellow"
+        row_1, col_1 = self.rumor_starter.location
+        self.cells[row_1][col_1].configure(bg=self.rumor_starter.color)
+
+        # for i in range(10):
+        #     self.master.after(1000, self.run_round)
+        #     self.master.after(1000, self.update_grid_colors)
+
+        # add a "Next Round" button
+        next_round_button = tk.Button(self.master, text="Next Round", command=self.run_round)
+        next_round_button.grid(row=GRID_SIZE + 1, column=0, columnspan=GRID_SIZE)
+
 
 root = tk.Tk()
 app = App(root)
+app.main_loop()
 root.mainloop()
