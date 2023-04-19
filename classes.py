@@ -2,11 +2,12 @@
 
 class Person:
     # TODO: add color?
-    def __int__(self, doubt, location, l):
+    def __int__(self, doubt, l, color = "white"):
         self.doubt_level = doubt
-        self.location = location
+        # self.location = location
         self.rumor_cooldown = l
         self.is_triggered = False
+        self.color = color
 
 
     def spread_rumor(self, matrix, row, col):

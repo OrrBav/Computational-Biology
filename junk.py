@@ -215,3 +215,87 @@ input_list = ["FINAL Helthy: ", "FINAL Sick: ",
 default_list = [H, S, V, gen_limit, Pi,Pv, Sick2vaccinated]
 # creating a integer box
 output = multenterbox(text, title, input_list, default_list)
+
+'''
+import tkinter as tk
+import random
+
+SCREEN_WIDTH = 500
+SCREEN_HEIGHT = 500
+GREED_SIZE = 5
+
+class Person:
+    def __init__(self, doubt, l, color="white"):
+        self.doubt_level = doubt
+        # self.location = location
+        self.rumor_cooldown = l
+        self.is_triggered = False
+        self.color = color
+
+
+class App:
+    def __init__(self, master, P=0.3):
+        self.master = master
+        master.title("Person Interaction GUI")
+        self.P = P
+        self.people = [[None for _ in range(GREED_SIZE)] for _ in range(GREED_SIZE)]
+        self.cells = [[None for _ in range(GREED_SIZE)] for _ in range(GREED_SIZE)]
+        self.cell_size = min(SCREEN_WIDTH // GREED_SIZE, SCREEN_HEIGHT // GREED_SIZE)
+        self.create_people()
+        self.create_gui()
+
+    def create_people(self):
+        # multiplying the values help up control the distribution of doubt levels.
+        doubt_levels = ["S1"] * 70 + ["S2"] * 10 + ["S3"] * 10 + ["S4"] * 10
+        for row in range(GREED_SIZE):
+            for column in range(GREED_SIZE):
+                if random.random() < self.P:
+                    doubt_level = random.choice(doubt_levels)
+                    color = "green"
+                    if (doubt_level == "S1"):
+                        color = "red"
+                    self.people[row][column] = Person(doubt=doubt_level, l=0, color=color)
+
+    def create_gui(self):
+        # create the grid of cells
+        for row in range(GREED_SIZE):
+            for col in range(GREED_SIZE):
+                if self.people[row][col] is not None:
+                    cell = tk.Canvas(self.master, width=self.cell_size, height=self.cell_size,
+                                     bg=self.people[row][col].color)
+                else:
+                    cell = tk.Canvas(self.master, width=self.cell_size, height=self.cell_size, bg='light grey')
+                cell.grid(row=row, column=col, padx=1, pady=1)
+                # cell_label = tk.Label(cell, text=self.people[row][col].name, font=('Arial', 8))
+                # cell_label.pack(pady=15)
+                self.cells[row][col] = cell
+
+        # bind the left click event to the cells
+        for row in range(GREED_SIZE):
+            for col in range(GREED_SIZE):
+                if self.people[row][col] is not None:
+                    self.cells[row][col].bind('<Button-1>', lambda event, row=row, col=col: self.cell_clicked(row, col))
+
+    def cell_clicked(self, row, col):
+        # set the color of the clicked cell to a random color
+        self.people[row][col].color = '#{:06x}'.format(random.randint(0, 0xFFFFFF))
+        self.cells[row][col].configure(bg=self.people[row][col].color)
+
+        # change the color of the surrounding cells
+        for i in range(max(0, row - 1), min(GREED_SIZE, row + 2)):
+            for j in range(max(0, col - 1), min(GREED_SIZE, col + 2)):
+                if i != row or j != col:
+                    # ensures only surrounding cells that contain people will be affected.
+                    # TODO:
+                    # person who recieved the rumor should spread it in the next turn
+                    if self.people[i][j]:
+                        self.people[i][j].color = self.people[row][col].color
+                        self.cells[i][j].configure(bg=self.people[i][j].color)
+
+
+
+root = tk.Tk()
+app = App(root)
+root.mainloop()
+
+'''
