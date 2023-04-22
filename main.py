@@ -3,11 +3,15 @@ import random
 
 SCREEN_WIDTH = 300
 SCREEN_HEIGHT = 300
-GRID_SIZE = 20
+GRID_SIZE = 35
 COOLDOWN = 2
 PROB = 0.6
 NEUTRAL = "dark blue"
 SPREADER = "dark red"
+POPULATION = 0
+SPREADER_PEOPLE = set()
+DOUBT_TRACKER = {'s1': 0, 's2': 0, 's3': 0, 's4': 0, 's1*': 0, 's2*': 0, 's3*': 0, 's4*': 0}
+
 
 
 class Person:
@@ -27,18 +31,32 @@ class App:
         self.cell_size = min(SCREEN_WIDTH // GRID_SIZE, SCREEN_HEIGHT // GRID_SIZE)
         self.create_people()
         self.create_gui()
+        # create a label for displaying statistics
+        self.stats_label = tk.Label(self.master)
+        # stats_label.grid(row=3, column=0, padx=10, pady=10)
+        self.stats_label.grid(row=GRID_SIZE + 2, column=0, columnspan=GRID_SIZE, pady=10)
 
     def create_people(self):
         # create a list of doubt levels with different proportions. multiplying the values controls the distribution.
         # doubt levels: 0="S1", 1="S2", 2="S3", 3="S4"]
         doubt_levels = [0] * 70 + [1] * 10 + [2] * 10 + [3] * 10
+        global POPULATION, DOUBT_TRACKER
         for row in range(GRID_SIZE):
             for column in range(GRID_SIZE):
                 if random.random() < self.P:
                     doubt_level = random.choice(doubt_levels)
                     # initiate new Person with NEUTRAL color and randomly chosen doubt level
-                    self.people[row][column] = Person(doubt=doubt_level, location=(row, column), color=NEUTRAL)                    # NEUTRAL (blue) means a person is currently not a rumor spreader (didnt believe or haven't heared yet)
-                    # NEUTRAL (blue) means a person is currently not a rumor spreade- didn't believe or haven't heared yet
+                    self.people[row][column] = Person(doubt=doubt_level, location=(row, column), color=NEUTRAL)
+                    # NEUTRAL (blue) means a person is currently not a spreader - didn't believe or haven't heard yet
+                    POPULATION += 1
+                    if doubt_level == 0:
+                        DOUBT_TRACKER['s1'] += 1
+                    elif doubt_level == 1:
+                        DOUBT_TRACKER['s2'] += 1
+                    elif doubt_level == 2:
+                        DOUBT_TRACKER['s3'] += 1
+                    elif doubt_level == 3:
+                        DOUBT_TRACKER['s4'] += 1
 
     def believes_rumor(self, person, rumor_count):
         """
@@ -77,7 +95,7 @@ class App:
                 self.cells[row][col] = cell
 
     def run_round(self):
-
+        global SPREADER_PEOPLE
         # a list of all the people in the grid that are currently spreaders of the rumor
         current_spreaders = [
             self.people[row][col]
@@ -108,15 +126,29 @@ class App:
                     if len(neighbor_spreaders) > 0 and self.believes_rumor(person, len(neighbor_spreaders)):
                     # If the person has neighbor spreaders and he believes the rumor, add person to next round spreaders
                         new_spreaders.append(person)
+                        # for statistics
+                        SPREADER_PEOPLE.add(person.location)
 
         # Set the color of all new spreaders to SPREADER red
         for person in new_spreaders:
             person.color = SPREADER
 
+        s1 = 0
+        s2 = 0
+        s3 = 0
+        s4 = 0
         # color current spreaders back to NEUTRAL and reset their rumor cooldown
         for person in current_spreaders:
             person.color = NEUTRAL
             person.rumor_cooldown = COOLDOWN
+            if person.doubt_level == 0:
+                s1+=1
+            elif person.doubt_level == 1:
+                s2+=1
+            elif person.doubt_level == 1:
+                s3+=1
+            elif person.doubt_level == 1:
+                s4+=1
 
         # Update the GUI to reflect the new colors of all cells
         for row in range(GRID_SIZE):
@@ -125,6 +157,16 @@ class App:
                 if person is None:
                     continue
                 self.cells[row][col].configure(bg=person.color)
+
+        self.stats_label.config(
+            text=f"There Are {len(SPREADER_PEOPLE)} total spreaders from a total of {POPULATION} people.\n"
+                 f"Distribution of doubt level in current spreaders is:\n"
+                 f"S1:{s1}, S2:{s2}, S3:{s3},"
+                 f" S4:{s4,}"
+                 f" from a total distribution of S1:{DOUBT_TRACKER['s1']}, S2:{DOUBT_TRACKER['s2']},"
+                 f" S3:{DOUBT_TRACKER['s3']}, S4:{DOUBT_TRACKER['s4']}"
+        )
+
 
     def update_grid_colors(self):
         for row in range(GRID_SIZE):
@@ -135,11 +177,25 @@ class App:
                     self.cells[row][col].configure(bg=person.color)
 
     def main_loop(self):
+        global SPREADER_PEOPLE
         # initialize the rumor starter for the first round
         self.rumor_starter = random.choice([person for row in self.people for person in row if person is not None])
         self.rumor_starter.color = SPREADER
         row_1, col_1 = self.rumor_starter.location
         self.cells[row_1][col_1].configure(bg=self.rumor_starter.color)
+        SPREADER_PEOPLE.add((row_1, col_1))
+
+
+
+        # update the statistics label with data from variables
+        self.stats_label.config(
+            text=f"There Are {len(SPREADER_PEOPLE)} total spreaders from a total of {POPULATION} people.\n"
+                 f"Distribution of doubt level in current spreaders is:\n"
+                 f"S1:{DOUBT_TRACKER['s1*']}, S2:{DOUBT_TRACKER['s2*']}, S3:{DOUBT_TRACKER['s3*']},"
+                 f" S4:{DOUBT_TRACKER['s4*'],}"
+                 f" from a total distribution of S1:{DOUBT_TRACKER['s1']}, S2:{DOUBT_TRACKER['s2']},"
+                 f" S3:{DOUBT_TRACKER['s3']}, S4:{DOUBT_TRACKER['s4']}"
+        )
 
         # for i in range(10):
         #     self.master.after(1000, self.run_round)
@@ -148,6 +204,7 @@ class App:
         # add the "Next Round" button
         next_round_button = tk.Button(self.master, text="Next Round", command=self.run_round)
         next_round_button.grid(row=GRID_SIZE + 1, column=0, columnspan=GRID_SIZE)
+
 
 
 root = tk.Tk()
