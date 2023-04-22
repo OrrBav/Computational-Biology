@@ -29,33 +29,43 @@ class Person:
             if rumor_count == 1:
                 # if this person heard this rumor once, act normally
                 if person.doubt_level == 'S1':
-                    # forward rumor to all 8 neighbors
+                # forward rumor to all 8 neighbors
+                    pass
 
                 if person.doubt_level == 'S2':
-                    # forward rumor to all 8 neighbors with prob of 2/3
+                # forward rumor to all 8 neighbors with prob of 2/3
+                    pass
 
                 if person.doubt_level == 'S3':
-                    # forward rumor to all 8 neighbors with prob of 1/3
+                # forward rumor to all 8 neighbors with prob of 1/3
+                    pass
 
 
                 if person.doubt_level == 'S4':
-                    # don't forward the rumor
+                # don't forward the rumor
+                    pass
 
 
             if rumor_count > 1:
                 # if this person heard this rumor more than once, doubt_level decreases
                 if person.doubt_level == 'S1':
-                    # forward rumor to all 8 neighbors
+                # forward rumor to all 8 neighbors
+                    pass
 
                 if person.doubt_level == 'S2':
-                    # forward rumor to all 8 neighbors
+                # forward rumor to all 8 neighbors
+                    pass
+
 
                 if person.doubt_level == 'S3':
-                    # forward rumor to all 8 neighbors with prob of 2/3
+                # forward rumor to all 8 neighbors with prob of 2/3
+                    pass
 
                 if person.doubt_level == 'S4':
-            # forward rumor to all 8 neighbors with prob of 1/3
+                # forward rumor to all 8 neighbors with prob of 1/3
+                    pass
 
         else:
-    # so person.rumor_cooldown>0 and can't re-spread this rumor
+        # so person.rumor_cooldown>0 and can't re-spread this rumor
+            pass
 
