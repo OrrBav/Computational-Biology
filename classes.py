@@ -21,51 +21,11 @@ class Person:
                     self.person_refs[(row + i, col + j)].config(bg=neighbor.color)
 
 
-    def received_rumor(person, rumor_count):
-
-        if person.rumor_cooldown == 0:
-            # so person can re-spread this rumor
-
-            if rumor_count == 1:
-                # if this person heard this rumor once, act normally
-                if person.doubt_level == 'S1':
-                # forward rumor to all 8 neighbors
-                    pass
-
-                if person.doubt_level == 'S2':
-                # forward rumor to all 8 neighbors with prob of 2/3
-                    pass
-
-                if person.doubt_level == 'S3':
-                # forward rumor to all 8 neighbors with prob of 1/3
-                    pass
-
-
-                if person.doubt_level == 'S4':
-                # don't forward the rumor
-                    pass
-
-
-            if rumor_count > 1:
-                # if this person heard this rumor more than once, doubt_level decreases
-                if person.doubt_level == 'S1':
-                # forward rumor to all 8 neighbors
-                    pass
-
-                if person.doubt_level == 'S2':
-                # forward rumor to all 8 neighbors
-                    pass
-
-
-                if person.doubt_level == 'S3':
-                # forward rumor to all 8 neighbors with prob of 2/3
-                    pass
-
-                if person.doubt_level == 'S4':
-                # forward rumor to all 8 neighbors with prob of 1/3
-                    pass
-
-        else:
-        # so person.rumor_cooldown>0 and can't re-spread this rumor
-            pass
-
+    def believes_rumor(person, rumor_count):
+        current_doubt_level = person.doubt_level if rumor_count < 2 else max(0, person.doubt_level - 1)
+        # S3 -> 2
+        # [False] * 2 + [True] * 1 = [False, False, True]
+        # S2 -> 1
+        # [False] * 1 + [True] * 2 = [False, True, True]
+        doubt_level_choices = [False] * current_doubt_level + [True] * (3 - current_doubt_level)
+        return random.choice(doubt_level_choices)
