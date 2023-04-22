@@ -3,20 +3,11 @@ import random
 
 SCREEN_WIDTH = 300
 SCREEN_HEIGHT = 300
-GRID_SIZE = 30
-COOLDOWN = 3
+GRID_SIZE = 20
+COOLDOWN = 2
+PROB = 0.6
 NEUTRAL = "dark blue"
 SPREADER = "dark red"
-
-
-def believes_rumor(person, rumor_count):
-    current_doubt_level = person.doubt_level if rumor_count < 2 else max(0, person.doubt_level - 1)
-    # S3 -> 2
-    # [False] * 2 + [True] * 1 = [False, False, True]
-    # S2 -> 1
-    # [False] * 1 + [True] * 2 = [False, True, True]
-    doubt_level_choices = [False] * current_doubt_level + [True] * (3 - current_doubt_level)
-    return random.choice(doubt_level_choices)
 
 
 class Person:
@@ -24,15 +15,13 @@ class Person:
         self.doubt_level = doubt
         self.location = location
         self.rumor_cooldown = 0
-        # self.is_triggered = False
         self.color = color
 
 class App:
-    def __init__(self, master, P=0.6):
+    def __init__(self, master):
         self.master = master
         master.title("Person Interaction GUI")
-        self.P = P
-        # TODO: convert "P" to global as well
+        self.P = PROB
         self.people = [[None for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
         self.cells = [[None for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
         self.cell_size = min(SCREEN_WIDTH // GRID_SIZE, SCREEN_HEIGHT // GRID_SIZE)
@@ -41,16 +30,37 @@ class App:
 
     def create_people(self):
         # create a list of doubt levels with different proportions. multiplying the values controls the distribution.
-        # doubt_levels = ["S1"] * 70 + ["S2"] * 10 + ["S3"] * 10 + ["S4"] * 10
+        # doubt levels: 0="S1", 1="S2", 2="S3", 3="S4"]
         doubt_levels = [0] * 70 + [1] * 10 + [2] * 10 + [3] * 10
         for row in range(GRID_SIZE):
             for column in range(GRID_SIZE):
                 if random.random() < self.P:
                     doubt_level = random.choice(doubt_levels)
-                    # set the default color of the person to NEUTRAL dark blue.
-                    # NEUTRAL (blue) means a person is currently not a rumor spreader (didnt believe or haven't heared yet)
-                    # create a Person object and add it to the people list in the corresponding cell
-                    self.people[row][column] = Person(doubt=doubt_level, location=(row, column), color=NEUTRAL)
+                    # initiate new Person with NEUTRAL color and randomly chosen doubt level
+                    self.people[row][column] = Person(doubt=doubt_level, location=(row, column), color=NEUTRAL)                    # NEUTRAL (blue) means a person is currently not a rumor spreader (didnt believe or haven't heared yet)
+                    # NEUTRAL (blue) means a person is currently not a rumor spreade- didn't believe or haven't heared yet
+
+    def believes_rumor(self, person, rumor_count):
+        """
+        the function determines whether a person believes a rumor or not,
+        based on the person's doubt level and the number of times he heard this rumor before.
+        """
+
+        # determines current doubt level
+        # if rumor_count < 2 so the doubt level remains the same, else the doubt level will decreas by 1
+        current_doubt_level = person.doubt_level if rumor_count < 2 else max(0, person.doubt_level - 1)
+
+        doubt_level_choices = [False] * current_doubt_level + [True] * (3 - current_doubt_level)
+        # examples:
+        # if doubt level is 3 (=S4) we get 0/3 chance to believe
+        # [False] * 3 + [True] * 0 = [False, False, False]
+        # if doubt level is 2 (=S3) we get 1/3 chance to believe
+        # [False] * 2 + [True] * 1 = [False, False, True]
+        # if doubt level is 1 (=S2) we get 2/3 chance to believe
+        # [False] * 1 + [True] * 2 = [False, True, True]
+        # if doubt level is 0 (=S1) we get 3/3 chance to believe
+        # [False] * 1 + [True] * 2 = [True, True, True]
+        return random.choice(doubt_level_choices)
 
     def create_gui(self):
         # creates the GUI for the simulation
@@ -67,8 +77,8 @@ class App:
                 self.cells[row][col] = cell
 
     def run_round(self):
-        new_spreaders = []
 
+        # a list of all the people in the grid that are currently spreaders of the rumor
         current_spreaders = [
             self.people[row][col]
             for row in range(GRID_SIZE)
@@ -85,23 +95,30 @@ class App:
                 if person.rumor_cooldown > 0:
                     person.rumor_cooldown -= 1
                 if person.color == NEUTRAL and person.rumor_cooldown == 0:
+                # the person is a potential spreader, so extract all their neighbors
                     neighbors = [
                         self.people[i][j]
                         for i in range(max(0, row - 1), min(GRID_SIZE, row + 2))
                         for j in range(max(0, col - 1), min(GRID_SIZE, col + 2))
                         if (i != row or j != col) and self.people[i][j] is not None
                     ]
+                    # extract only the spreaders from their list of neighbors
                     neighbor_spreaders = [neighbor for neighbor in neighbors if neighbor.color == SPREADER]
-                    if len(neighbor_spreaders) > 0 and believes_rumor(person, len(neighbor_spreaders)):
+
+                    if len(neighbor_spreaders) > 0 and self.believes_rumor(person, len(neighbor_spreaders)):
+                    # If the person has neighbor spreaders and he believes the rumor, add person to next round spreaders
                         new_spreaders.append(person)
 
+        # Set the color of all new spreaders to SPREADER red
         for person in new_spreaders:
             person.color = SPREADER
 
+        # color current spreaders back to NEUTRAL and reset their rumor cooldown
         for person in current_spreaders:
             person.color = NEUTRAL
             person.rumor_cooldown = COOLDOWN
 
+        # Update the GUI to reflect the new colors of all cells
         for row in range(GRID_SIZE):
             for col in range(GRID_SIZE):
                 person = self.people[row][col]
@@ -128,7 +145,7 @@ class App:
         #     self.master.after(1000, self.run_round)
         #     self.master.after(1000, self.update_grid_colors)
 
-        # add a "Next Round" button
+        # add the "Next Round" button
         next_round_button = tk.Button(self.master, text="Next Round", command=self.run_round)
         next_round_button.grid(row=GRID_SIZE + 1, column=0, columnspan=GRID_SIZE)
 
