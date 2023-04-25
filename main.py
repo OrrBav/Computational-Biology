@@ -1,8 +1,8 @@
 import tkinter as tk
 import random
 
-SCREEN_WIDTH = 300
-SCREEN_HEIGHT = 100
+SCREEN_WIDTH = 200
+SCREEN_HEIGHT = 200
 GRID_SIZE = 50
 COOLDOWN = 2
 PROB = 0.6
@@ -15,13 +15,13 @@ DOUBT_TRACKER = {'s1': 0, 's2': 0, 's3': 0, 's4': 0, 's1*': 0, 's2*': 0, 's3*': 
 # TODO: remove s*
 
 
-
 class Person:
     def __init__(self, doubt, location, color="white"):
         self.doubt_level = doubt
         self.location = location
         self.rumor_cooldown = 0
         self.color = color
+
 
 class App:
     def __init__(self, master):
@@ -193,6 +193,7 @@ class App:
         self.cells[row_1][col_1].configure(bg=self.rumor_starter.color)
         HEARD_RUMOR.add((row_1, col_1))
 
+        # TODO delete after graphs and testing
         # self.rumor_starter2 = random.choice([person for row in self.people for person in row if person is not None])
         # self.rumor_starter2.color = SPREADER
         # row_2, col_2 = self.rumor_starter2.location
@@ -215,7 +216,8 @@ class App:
             starter_s3 += 1
         elif self.rumor_starter.doubt_level == 3:
             starter_s4 += 1
-        #
+
+        # TODO delete after graphs and testing
         # if self.rumor_starter2.doubt_level == 0:
         #     starter_s1 += 1
         # elif self.rumor_starter2.doubt_level == 1:
@@ -253,7 +255,6 @@ class App:
         # add the "Next Round" button
         next_round_button = tk.Button(self.master, text="Next Generation", command=self.run_round)
         next_round_button.grid(row=GRID_SIZE + 1, column=0, columnspan=GRID_SIZE)
-
 
 
 root = tk.Tk()
