@@ -3,7 +3,7 @@ import random
 
 SCREEN_WIDTH = 300
 SCREEN_HEIGHT = 300
-GRID_SIZE = 20
+GRID_SIZE = 24
 COOLDOWN = 2
 PROB = 0.6
 AUTO = False
@@ -99,10 +99,17 @@ class Simulation:
         for row in range(GRID_SIZE):
             for column in range(GRID_SIZE):
                 if random.random() < self.P:
-                    doubt_level = random.choice(doubt_levels)
-                    # initiate new Person with NEUTRAL color and randomly chosen doubt level
-                    self.people[row][column] = Person(doubt=doubt_level, location=(row, column), color=NEUTRAL)
-                    # NEUTRAL (blue) means a person is currently not a spreader - didn't believe or haven't heard yet
+                    # TODO: the if column%6==0 is for part B of exercise. can be deleted after...?
+                    if column % 6 == 0:
+                        doubt_level = 3
+                        self.people[row][column] = Person(doubt=doubt_level, location=(row, column), color="orange")
+                    else:
+                        doubt_level = random.choice(doubt_levels)
+                        # initiate new Person with NEUTRAL color and randomly chosen doubt level
+                        # NEUTRAL means a person is currently not a rumor spreader (didn't believe or haven't heared yet)
+                        self.people[row][column] = Person(doubt=doubt_level, location=(row, column), color=NEUTRAL)
+
+                    # keep track of population types (for statistics)
                     POPULATION += 1
                     if doubt_level == 0:
                         DOUBT_TRACKER['s1'] += 1
@@ -112,8 +119,7 @@ class Simulation:
                         DOUBT_TRACKER['s3'] += 1
                     elif doubt_level == 3:
                         DOUBT_TRACKER['s4'] += 1
-                    self.people[row][column] = Person(doubt=doubt_level, location=(row, column), color=NEUTRAL)
-                    # NEUTRAL means a person is currently not a rumor spreader (didn't believe or haven't heared yet)
+
 
     def believes_rumor(self, person, rumor_count):
         """
@@ -157,7 +163,8 @@ class Simulation:
                     continue
                 if person.rumor_cooldown > 0:
                     person.rumor_cooldown -= 1
-                if person.color == NEUTRAL and person.rumor_cooldown == 0:
+                #TODO: after part be delete "or person.color == "orange")" ???
+                if (person.color == NEUTRAL or person.color == "orange") and person.rumor_cooldown == 0:
                 # the person is a potential spreader, so extract all their neighbors
                     neighbors = [
                         self.people[i][j]
