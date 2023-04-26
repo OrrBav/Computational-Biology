@@ -1,18 +1,44 @@
 import tkinter as tk
 import random
 
-SCREEN_WIDTH = 200
-SCREEN_HEIGHT = 200
-GRID_SIZE = 50
+SCREEN_WIDTH = 300
+SCREEN_HEIGHT = 300
+GRID_SIZE = 20
 COOLDOWN = 2
 PROB = 0.6
+AUTO = False
 NEUTRAL = "dark blue"
-SPREADER = "dark red"
+SPREADER = "red"
 POPULATION = 0
 GENERATION = 1
 HEARD_RUMOR = set()
-DOUBT_TRACKER = {'s1': 0, 's2': 0, 's3': 0, 's4': 0, 's1*': 0, 's2*': 0, 's3*': 0, 's4*': 0}
-# TODO: remove s*
+DOUBT_TRACKER = {'s1': 0, 's2': 0, 's3': 0, 's4': 0}
+
+
+class MainScreen:
+    def __init__(self, master):
+        self.master = master
+        self.master.title("Main Screen")
+
+        main_frame = tk.Frame(self.master, width=150, height=150)
+        main_frame.grid(row=0, column=0)
+
+        # Create Auto and Manual mode buttons
+        auto_button = tk.Button(self.master, text="Auto Mode", command=self.auto_mode, width=20, height=5)
+        auto_button.grid(row=0, column=0, padx=20, pady=20)
+
+        manual_button = tk.Button(self.master, text="Manual Mode", command=self.manual_mode, width=20, height=5)
+        manual_button.grid(row=0, column=1, padx=20, pady=20)
+
+    def auto_mode(self):
+        global AUTO
+        AUTO = True
+        self.master.destroy()
+
+    def manual_mode(self):
+        global AUTO
+        AUTO = False
+        self.master.destroy()
 
 
 class Person:
@@ -23,20 +49,47 @@ class Person:
         self.color = color
 
 
-class App:
+class Simulation:
     def __init__(self, master):
         self.master = master
-        master.title("Person Interaction GUI")
+        master.title("Rumor Spread Model GUI")
         self.P = PROB
         self.people = [[None for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
         self.cells = [[None for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
         self.cell_size = min(SCREEN_WIDTH // GRID_SIZE, SCREEN_HEIGHT // GRID_SIZE)
+        self.auto = AUTO
+        self.started = False
         self.create_people()
         self.create_gui()
         # create a label for displaying statistics
         self.stats_label = tk.Label(self.master)
         # stats_label.grid(row=3, column=0, padx=10, pady=10)
         self.stats_label.grid(row=GRID_SIZE + 2, column=0, columnspan=GRID_SIZE, pady=10)
+
+    def create_gui(self):
+        # creates the GUI for the simulation
+        for row in range(GRID_SIZE):
+            for col in range(GRID_SIZE):
+                if self.people[row][col] is not None:
+                    # if there is a person in the cell, color according to his doubt level
+                    cell = tk.Canvas(self.master, width=self.cell_size, height=self.cell_size,
+                                     bg=self.people[row][col].color)
+                else:
+                    # If there isn't, color cell with grey
+                    cell = tk.Canvas(self.master, width=self.cell_size, height=self.cell_size, bg='light grey')
+                cell.grid(row=row, column=col, padx=1, pady=1)
+                self.cells[row][col] = cell
+
+        if not self.auto:
+        # Manual mode, init GUI with the "Next Generation" button
+            next_round_button = tk.Button(self.master, text="Next Generation", command=self.start_rounds)
+            next_round_button.grid(row=GRID_SIZE + 1, column=0, columnspan=GRID_SIZE)
+
+        else:
+        # Auto mode, init GUI with the "Start Simulation" button
+            start_button = tk.Button(self.master, text="Start Simulation", command=self.start_rounds)
+            start_button.grid(row=GRID_SIZE + 1, column=0, columnspan=GRID_SIZE)
+
 
     def create_people(self):
         # create a list of doubt levels with different proportions. multiplying the values controls the distribution.
@@ -60,7 +113,7 @@ class App:
                     elif doubt_level == 3:
                         DOUBT_TRACKER['s4'] += 1
                     self.people[row][column] = Person(doubt=doubt_level, location=(row, column), color=NEUTRAL)
-                    # NEUTRAL (blue) means a person is currently not a rumor spreade- didn't believe or haven't heared yet
+                    # NEUTRAL means a person is currently not a rumor spreader (didn't believe or haven't heared yet)
 
     def believes_rumor(self, person, rumor_count):
         """
@@ -84,19 +137,6 @@ class App:
         # [False] * 1 + [True] * 2 = [True, True, True]
         return random.choice(doubt_level_choices)
 
-    def create_gui(self):
-        # creates the GUI for the simulation
-        for row in range(GRID_SIZE):
-            for col in range(GRID_SIZE):
-                if self.people[row][col] is not None:
-                # if there is a person in the cell, color according to his doubt level
-                    cell = tk.Canvas(self.master, width=self.cell_size, height=self.cell_size,
-                                     bg=self.people[row][col].color)
-                else:
-                # If there isn't, color cell with grey
-                    cell = tk.Canvas(self.master, width=self.cell_size, height=self.cell_size, bg='light grey')
-                cell.grid(row=row, column=col, padx=1, pady=1)
-                self.cells[row][col] = cell
 
     def run_round(self):
         global HEARD_RUMOR, GENERATION
@@ -175,15 +215,6 @@ class App:
                  f" S1:{active_s1}, S2:{active_s2}, S3:{active_s3}, S4:{active_s4}"
         )
 
-    # TODO: delete this??
-    def update_grid_colors(self):
-        for row in range(GRID_SIZE):
-            for col in range(GRID_SIZE):
-                person = self.people[row][col]
-                if person:
-                # if there's a Person in that cell
-                    self.cells[row][col].configure(bg=person.color)
-
     def main_loop(self):
         global HEARD_RUMOR
         # initialize the rumor starter for the first round
@@ -248,16 +279,29 @@ class App:
                  f" S1:{starter_s1}, S2:{starter_s2}, S3:{starter_s3}, S4:{starter_s4}"
         )
 
-        # for i in range(10):
-        #     self.master.after(1000, self.run_round)
-        #     self.master.after(1000, self.update_grid_colors)
 
-        # add the "Next Round" button
-        next_round_button = tk.Button(self.master, text="Next Generation", command=self.run_round)
-        next_round_button.grid(row=GRID_SIZE + 1, column=0, columnspan=GRID_SIZE)
+    def start_rounds(self):
+        if not self.auto:
+            self.run_round()
+            return
+        # Auto mode:
+        self.run_round()
+        if self.auto and not self.started:
+            self.started = True
+            stop_button = tk.Button(self.master, text="Increase  Speed", command=self.start_rounds)
+            stop_button.grid(row=GRID_SIZE + 1, column=0, columnspan=GRID_SIZE)
+
+        # automatically run the next round after 1000 milliseconds (1 second)
+        self.master.after(1000, self.start_rounds)
 
 
+# create the main screen to choose auto mode or manual mode
+main_root = tk.Tk()
+main_screen = MainScreen(main_root)
+main_root.mainloop()
+
+# create the simulation in selected mode
 root = tk.Tk()
-app = App(root)
-app.main_loop()
+simulation = Simulation(root)
+simulation.main_loop()
 root.mainloop()
