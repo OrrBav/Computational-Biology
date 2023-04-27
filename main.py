@@ -1,13 +1,13 @@
 import tkinter as tk
 import random
 
-SCREEN_WIDTH = 300
-SCREEN_HEIGHT = 300
-GRID_SIZE = 35
+SCREEN_WIDTH = 400
+SCREEN_HEIGHT = 400
+GRID_SIZE = 50
 COOLDOWN = 2
 PROB = 0.6
-NEUTRAL = "dark blue"
-SPREADER = "dark red"
+NEUTRAL = "green"
+SPREADER = "#ff4a6b"
 POPULATION = 0
 SPREADER_PEOPLE = set()
 DOUBT_TRACKER = {'s1': 0, 's2': 0, 's3': 0, 's4': 0, 's1*': 0, 's2*': 0, 's3*': 0, 's4*': 0}
@@ -39,7 +39,7 @@ class App:
     def create_people(self):
         # create a list of doubt levels with different proportions. multiplying the values controls the distribution.
         # doubt levels: 0="S1", 1="S2", 2="S3", 3="S4"]
-        doubt_levels = [0] * 70 + [1] * 10 + [2] * 10 + [3] * 10
+        doubt_levels = [0] * 0 + [1] * 30 + [2] * 20 + [3] * 50
         global POPULATION, DOUBT_TRACKER
         for row in range(GRID_SIZE):
             for column in range(GRID_SIZE):
