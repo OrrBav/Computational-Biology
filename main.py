@@ -1,13 +1,16 @@
 import tkinter as tk
 import random
 
+# Global Variables
 SCREEN_WIDTH = 300
 SCREEN_HEIGHT = 300
-GRID_SIZE = 35
+GRID_SIZE = 80
 COOLDOWN = 2
 PROB = 0.6
+AUTO = False
+PART_B = False
 NEUTRAL = "dark blue"
-SPREADER = "dark red"
+SPREADER = "red"
 POPULATION = 0
 GENERATION = 1
 HEARD_RUMOR = set()
@@ -15,6 +18,9 @@ DOUBT_TRACKER = {'s1': 0, 's2': 0, 's3': 0, 's4': 0}
 
 
 class MainScreen:
+    """
+    This class will load the main screen, where the user can choose his desired Run options.
+    """
     def __init__(self, master):
         self.master = master
         self.master.title("Main Screen")
@@ -23,24 +29,43 @@ class MainScreen:
         main_frame.grid(row=0, column=0)
 
         # Create Auto and Manual mode buttons
-        auto_button = tk.Button(self.master, text="Auto Mode", command=self.auto_mode, width=20, height=5)
+        auto_button = tk.Button(self.master, text="Part A:Auto Mode", command=lambda: self.part_A(auto=True), width=20, height=5)
         auto_button.grid(row=0, column=0, padx=20, pady=20)
 
-        manual_button = tk.Button(self.master, text="Manual Mode", command=self.manual_mode, width=20, height=5)
+        manual_button = tk.Button(self.master, text="Part A:Manual Mode", command=lambda: self.part_A(auto=False), width=20, height=5)
         manual_button.grid(row=0, column=1, padx=20, pady=20)
 
-    def auto_mode(self):
+        part_b_auto = tk.Button(self.master, text="Part B:Auto Mode", command=lambda: self.part_B(auto=True), width=20, height=5)
+        part_b_auto.grid(row=1, column=0, padx=20, pady=20)
+
+        part_b_manual = tk.Button(self.master, text="Part B:Manual Mode", command=lambda: self.part_B(auto=False), width=20, height=5)
+        part_b_manual.grid(row=1, column=1, padx=20, pady=20)
+
+    def part_A(self, auto):
+        """
+        Sets globals variables to the user's input in Part A of the exercise.
+        :param auto: True if generation run is automatic, false otherwise.
+        """
         global AUTO
-        AUTO = True
+        AUTO = auto
         self.master.destroy()
 
-    def manual_mode(self):
-        global AUTO
-        AUTO = False
+    def part_B(self, auto):
+        """
+        Sets globals variables to the user's input in Part B of the exercise.
+        :param auto: True if generation run is automatic, false otherwise.
+        """
+        global AUTO, PART_B
+        AUTO = auto
+        PART_B = True
         self.master.destroy()
 
 
 class Person:
+    """
+    each cell in the GUI will have a chance of containing a Person, who will spread the Rumor.
+    Class will hold valuable information about each person, that will help setting up proper GUI interactions.
+    """
     def __init__(self, doubt, location, color="white"):
         self.doubt_level = doubt
         self.location = location
@@ -49,6 +74,10 @@ class Person:
 
 
 class Simulation:
+    """
+    Main class for this program.
+    will setp up the GUI, create and place in its cell People, and will run the simulation.
+    """
     def __init__(self, master):
         self.master = master
         master.title("Rumor Spread Model GUI")
@@ -62,11 +91,12 @@ class Simulation:
         self.create_gui()
         # create a label for displaying statistics
         self.stats_label = tk.Label(self.master)
-        # stats_label.grid(row=3, column=0, padx=10, pady=10)
         self.stats_label.grid(row=GRID_SIZE + 2, column=0, columnspan=GRID_SIZE, pady=10)
 
     def create_gui(self):
-        # creates the GUI for the simulation
+        """
+        creates the GUI for the simulation.
+        """
         for row in range(GRID_SIZE):
             for col in range(GRID_SIZE):
                 if self.people[row][col] is not None:
@@ -91,21 +121,27 @@ class Simulation:
 
 
     def create_people(self):
-        # create a list of doubt levels with different proportions. multiplying the values controls the distribution.
+        """
+        Funtion will create people in random cells, according to P variable - the population density.
+        """
+        # creates a list of doubt levels with different proportions. multiplying the values controls the distribution.
         # doubt levels: 0="S1", 1="S2", 2="S3", 3="S4"]
         doubt_levels = [0] * 70 + [1] * 10 + [2] * 10 + [3] * 10
         global POPULATION, DOUBT_TRACKER
         for row in range(GRID_SIZE):
             for column in range(GRID_SIZE):
                 if random.random() < self.P:
-                    # TODO: the if column%6==0 is for part B of exercise. can be deleted after...?
-                    if column % 6 == 0:
-                        doubt_level = 3
-                        self.people[row][column] = Person(doubt=doubt_level, location=(row, column), color="orange")
+                    if PART_B:
+                        if column % 6 == 0:
+                            doubt_level = 3
+                            self.people[row][column] = Person(doubt=doubt_level, location=(row, column), color="orange")
+                        else:
+                            doubt_level = random.choice(doubt_levels)
+                            self.people[row][column] = Person(doubt=doubt_level, location=(row, column), color=NEUTRAL)
                     else:
                         doubt_level = random.choice(doubt_levels)
                         # initiate new Person with NEUTRAL color and randomly chosen doubt level
-                        # NEUTRAL means a person is currently not a rumor spreader (didn't believe or haven't heared yet)
+                        # NEUTRAL means a person is currently not a spreader (didn't believe or haven't heard yet)
                         self.people[row][column] = Person(doubt=doubt_level, location=(row, column), color=NEUTRAL)
 
                     # keep track of population types (for statistics)
@@ -125,11 +161,9 @@ class Simulation:
         the function determines whether a person believes a rumor or not,
         based on the person's doubt level and the number of times he heard this rumor before.
         """
-
         # determines current doubt level,
         # if rumor_count < 2 so the doubt level remains the same, else the doubt level will decreas by 1
         current_doubt_level = person.doubt_level if rumor_count < 2 else max(0, person.doubt_level - 1)
-
         doubt_level_choices = [False] * current_doubt_level + [True] * (3 - current_doubt_level)
         # examples:
         # if doubt level is 3 (=S4) we get 0/3 chance to believe
@@ -142,21 +176,13 @@ class Simulation:
         # [False] * 1 + [True] * 2 = [True, True, True]
         return random.choice(doubt_level_choices)
 
-    def create_gui(self):
-        # creates the GUI for the simulation
-        for row in range(GRID_SIZE):
-            for col in range(GRID_SIZE):
-                if self.people[row][col] is not None:
-                # if there is a person in the cell, color according to his doubt level
-                    cell = tk.Canvas(self.master, width=self.cell_size, height=self.cell_size,
-                                     bg=self.people[row][col].color)
-                else:
-                # If there isn't, color cell with grey
-                    cell = tk.Canvas(self.master, width=self.cell_size, height=self.cell_size, bg='light grey')
-                cell.grid(row=row, column=col, padx=1, pady=1)
-                self.cells[row][col] = cell
 
     def run_round(self):
+        """
+        Function responsible for a single round of the simulation.
+        spreads the rumor for each of the spreaders neighbors, and then updates their color, and the grid cells color.
+        :return:
+        """
         global HEARD_RUMOR, GENERATION
         GENERATION +=1
         # a list of all the people in the grid that are currently spreaders of the rumor
@@ -175,8 +201,11 @@ class Simulation:
                     continue
                 if person.rumor_cooldown > 0:
                     person.rumor_cooldown -= 1
-                #TODO: after part be delete "or person.color == "orange")" ???
-                if (person.color == NEUTRAL or person.color == "orange") and person.rumor_cooldown == 0:
+                # if we're running Part A, should check that person.color = neutral and rumor_cooldown=0.
+                # if we're running Part B, person color can also be orange, indicating the S4 wall every 6 blocks.
+                if (not PART_B and person.color == NEUTRAL or PART_B
+                    and (person.color == NEUTRAL or person.color == "orange")) \
+                        and person.rumor_cooldown == 0:
                 # the person is a potential spreader, so extract all their neighbors
                     neighbors = [
                         self.people[i][j]
@@ -209,15 +238,10 @@ class Simulation:
             elif person.doubt_level == 3:
                 active_s4 += 1
 
-        s1 = 0
-        s2 = 0
-        s3 = 0
-        s4 = 0
         # color current spreaders back to NEUTRAL and reset their rumor cooldown
         for person in current_spreaders:
             person.color = NEUTRAL
             person.rumor_cooldown = COOLDOWN
-
 
         # Update the GUI to reflect the new colors of all cells
         for row in range(GRID_SIZE):
@@ -227,6 +251,7 @@ class Simulation:
                     continue
                 self.cells[row][col].configure(bg=person.color)
 
+        # stats for second round and after
         self.stats_label.config(
             text=f"Generation: {GENERATION}\n"
                  f"Total population: {POPULATION}\n"
@@ -238,6 +263,9 @@ class Simulation:
         )
 
     def main_loop(self):
+        """
+        creates the first spreader(or spreaders), keeps track of stats.
+        """
         global HEARD_RUMOR
         # initialize the rumor starter for the first round
         self.rumor_starter = random.choice([person for row in self.people for person in row if person is not None])
@@ -245,19 +273,6 @@ class Simulation:
         row_1, col_1 = self.rumor_starter.location
         self.cells[row_1][col_1].configure(bg=self.rumor_starter.color)
         HEARD_RUMOR.add((row_1, col_1))
-
-        # TODO delete after graphs and testing
-        # self.rumor_starter2 = random.choice([person for row in self.people for person in row if person is not None])
-        # self.rumor_starter2.color = SPREADER
-        # row_2, col_2 = self.rumor_starter2.location
-        # self.cells[row_2][col_2].configure(bg=self.rumor_starter2.color)
-        # HEARD_RUMOR.add((row_2, col_2))
-        #
-        # self.rumor_starter3 = random.choice([person for row in self.people for person in row if person is not None])
-        # self.rumor_starter3.color = SPREADER
-        # row_3, col_3 = self.rumor_starter3.location
-        # self.cells[row_3][col_3].configure(bg=self.rumor_starter3.color)
-        # HEARD_RUMOR.add((row_3, col_3))
 
         # get doubt level of rumor_starter (for statistics)
         starter_s1, starter_s2, starter_s3, starter_s4 = [0 for _ in range(4)]
@@ -269,25 +284,6 @@ class Simulation:
             starter_s3 += 1
         elif self.rumor_starter.doubt_level == 3:
             starter_s4 += 1
-
-        # TODO delete after graphs and testing
-        # if self.rumor_starter2.doubt_level == 0:
-        #     starter_s1 += 1
-        # elif self.rumor_starter2.doubt_level == 1:
-        #     starter_s2 += 1
-        # elif self.rumor_starter2.doubt_level == 2:
-        #     starter_s3 += 1
-        # elif self.rumor_starter2.doubt_level == 3:
-        #     starter_s4 += 1
-        #
-        # if self.rumor_starter3.doubt_level == 0:
-        #     starter_s1 += 1
-        # elif self.rumor_starter3.doubt_level == 1:
-        #     starter_s2 += 1
-        # elif self.rumor_starter3.doubt_level == 2:
-        #     starter_s3 += 1
-        # elif self.rumor_starter3.doubt_level == 3:
-        #     starter_s4 += 1
 
         # stats for first round only
         # update the statistics label with data from variables
@@ -301,8 +297,10 @@ class Simulation:
                  f" S1:{starter_s1}, S2:{starter_s2}, S3:{starter_s3}, S4:{starter_s4}"
         )
 
-
     def start_rounds(self):
+        """
+        Function is reponsibale for running the generation loop, according to user's input (auto mode and Part A/B).
+        """
         if not self.auto:
             self.run_round()
             return
@@ -310,7 +308,7 @@ class Simulation:
         self.run_round()
         if self.auto and not self.started:
             self.started = True
-            stop_button = tk.Button(self.master, text="Increase  Speed", command=self.start_rounds)
+            stop_button = tk.Button(self.master, text="Increase Speed", command=self.start_rounds)
             stop_button.grid(row=GRID_SIZE + 1, column=0, columnspan=GRID_SIZE)
 
         # automatically run the next round after 1000 milliseconds (1 second)
