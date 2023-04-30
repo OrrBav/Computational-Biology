@@ -16,9 +16,6 @@ GENERATION = 1
 HEARD_RUMOR = set()
 DOUBT_TRACKER = {'s1': 0, 's2': 0, 's3': 0, 's4': 0}
 
-# TODO: delete after graphs
-GRAPH_LIST = []
-
 
 class MainScreen:
     """
@@ -240,11 +237,6 @@ class Simulation:
                 active_s3 += 1
             elif person.doubt_level == 3:
                 active_s4 += 1
-
-        # TODO: delete after graphs
-        global GRAPH_LIST
-        GRAPH_LIST.append(len(HEARD_RUMOR))
-        print(GRAPH_LIST)
 
         # color current spreaders back to NEUTRAL and reset their rumor cooldown
         for person in current_spreaders:
