@@ -4,13 +4,14 @@ import random
 # Global Variables
 SCREEN_WIDTH = 300
 SCREEN_HEIGHT = 300
-GRID_SIZE = 80
+GRID_SIZE = 30
 COOLDOWN = 2
 PROB = 0.6
-AUTO = False
-PART_B = False
 NEUTRAL = "dark blue"
 SPREADER = "red"
+# Global variables for statistics
+AUTO = False
+PART_B = False
 POPULATION = 0
 GENERATION = 1
 HEARD_RUMOR = set()
