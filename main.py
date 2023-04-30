@@ -16,6 +16,9 @@ GENERATION = 1
 HEARD_RUMOR = set()
 DOUBT_TRACKER = {'s1': 0, 's2': 0, 's3': 0, 's4': 0}
 
+# TODO: delete after graphs
+GRAPH_LIST = []
+
 
 class MainScreen:
     """
@@ -29,16 +32,16 @@ class MainScreen:
         main_frame.grid(row=0, column=0)
 
         # Create Auto and Manual mode buttons
-        auto_button = tk.Button(self.master, text="Part A:Auto Mode", command=lambda: self.part_A(auto=True), width=20, height=5)
+        auto_button = tk.Button(self.master, text="Part A: Auto Mode", command=lambda: self.part_A(auto=True), width=20, height=5)
         auto_button.grid(row=0, column=0, padx=20, pady=20)
 
-        manual_button = tk.Button(self.master, text="Part A:Manual Mode", command=lambda: self.part_A(auto=False), width=20, height=5)
+        manual_button = tk.Button(self.master, text="Part A: Manual Mode", command=lambda: self.part_A(auto=False), width=20, height=5)
         manual_button.grid(row=0, column=1, padx=20, pady=20)
 
-        part_b_auto = tk.Button(self.master, text="Part B:Auto Mode", command=lambda: self.part_B(auto=True), width=20, height=5)
+        part_b_auto = tk.Button(self.master, text="Part B: Auto Mode", command=lambda: self.part_B(auto=True), width=20, height=5)
         part_b_auto.grid(row=1, column=0, padx=20, pady=20)
 
-        part_b_manual = tk.Button(self.master, text="Part B:Manual Mode", command=lambda: self.part_B(auto=False), width=20, height=5)
+        part_b_manual = tk.Button(self.master, text="Part B: Manual Mode", command=lambda: self.part_B(auto=False), width=20, height=5)
         part_b_manual.grid(row=1, column=1, padx=20, pady=20)
 
     def part_A(self, auto):
@@ -238,6 +241,11 @@ class Simulation:
             elif person.doubt_level == 3:
                 active_s4 += 1
 
+        # TODO: delete after graphs
+        global GRAPH_LIST
+        GRAPH_LIST.append(len(HEARD_RUMOR))
+        print(GRAPH_LIST)
+
         # color current spreaders back to NEUTRAL and reset their rumor cooldown
         for person in current_spreaders:
             person.color = NEUTRAL
@@ -254,7 +262,7 @@ class Simulation:
         # stats for second round and after
         self.stats_label.config(
             text=f"Generation: {GENERATION}\n"
-                 f"Total population: {POPULATION}\n"
+                 f"Total Population: {POPULATION}\n"
                  f"Doubt Level distribution: S1:{DOUBT_TRACKER['s1']}, S2:{DOUBT_TRACKER['s2']},"
                  f" S3:{DOUBT_TRACKER['s3']}, S4:{DOUBT_TRACKER['s4']}\n"
                  f"Out of {len(HEARD_RUMOR)} people who heard the rumor so far, {len(new_spreaders)} are active spreaders\n "
@@ -289,7 +297,7 @@ class Simulation:
         # update the statistics label with data from variables
         self.stats_label.config(
             text=f"Generation: {GENERATION}\n"
-                 f"Total population: {POPULATION}\n"
+                 f"Total Population: {POPULATION}\n"
                  f"Doubt Level distribution: S1:{DOUBT_TRACKER['s1']}, S2:{DOUBT_TRACKER['s2']},"
                  f" S3:{DOUBT_TRACKER['s3']}, S4:{DOUBT_TRACKER['s4']}\n"
                  f"Out of {len(HEARD_RUMOR)} people who heard the rumor so far, 1 are active spreaders\n "
@@ -308,7 +316,7 @@ class Simulation:
         self.run_round()
         if self.auto and not self.started:
             self.started = True
-            stop_button = tk.Button(self.master, text="Increase Speed", command=self.start_rounds)
+            stop_button = tk.Button(self.master, text="Increase  Speed", command=self.start_rounds)
             stop_button.grid(row=GRID_SIZE + 1, column=0, columnspan=GRID_SIZE)
 
         # automatically run the next round after 1000 milliseconds (1 second)
