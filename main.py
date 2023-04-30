@@ -17,6 +17,7 @@ HEARD_RUMOR = set()
 DOUBT_TRACKER = {'s1': 0, 's2': 0, 's3': 0, 's4': 0}
 
 
+
 class MainScreen:
     """
     This class will load the main screen, where the user can choose his desired Run options.
