@@ -2,9 +2,9 @@ import tkinter as tk
 import random
 
 # Global Variables
-SCREEN_WIDTH = 300
-SCREEN_HEIGHT = 300
-GRID_SIZE = 30
+SCREEN_WIDTH = 360
+SCREEN_HEIGHT = 360
+GRID_SIZE = 100
 COOLDOWN = 2
 PROB = 0.6
 NEUTRAL = "dark blue"
